@@ -41,6 +41,18 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+
+        // Check permission
+        if (EasyPermissions.hasPermissions(this, Manifest.permission.ACCESS_NETWORK_STATE)) {
+            registerNetworkCallback()
+        } else {
+            EasyPermissions.requestPermissions(
+                this,
+                "Accès à l'état du réseau requis.",
+                NETWORK_STATE,
+                Manifest.permission.ACCESS_NETWORK_STATE
+            )
+        }
     }
 
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
