@@ -2,18 +2,19 @@ package com.example.wifi_access
 
 import android.Manifest
 import android.os.Bundle
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import android.content.Context
 import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
-import android.widget.TextView
 import android.net.Network
+import android.net.NetworkCapabilities
 import android.net.NetworkRequest
-import androidx.annotation.RequiresPermission
+import pub.devrel.easypermissions.EasyPermissions
+import pub.devrel.easypermissions.EasyPermissions.PermissionCallbacks
 
+class MainActivity : AppCompatActivity(), PermissionCallbacks {
 
-class MainActivity : AppCompatActivity() {
-
+    private val NETWORK_STATE = 123
     private lateinit var textStatus: TextView
     private lateinit var connectivityManager: ConnectivityManager
     private lateinit var networkCallback: ConnectivityManager.NetworkCallback
@@ -24,7 +25,6 @@ class MainActivity : AppCompatActivity() {
 
         textStatus = findViewById(R.id.textStatus)
         connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-
 
         networkCallback = object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
@@ -55,52 +55,33 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
-    override fun onStart() {
-        super.onStart()
+    private fun registerNetworkCallback() {
         val request = NetworkRequest.Builder()
             .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
             .build()
         connectivityManager.registerNetworkCallback(request, networkCallback)
     }
 
+    override fun onPermissionsGranted(requestCode: Int, perms: List<String>) {
+        if (requestCode == NETWORK_STATE) registerNetworkCallback()
+    }
+
+    override fun onPermissionsDenied(requestCode: Int, perms: List<String>) {
+        textStatus.text = "Permission refusée"
+        textStatus.setTextColor(getColor(android.R.color.holo_red_dark))
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this)
+    }
+
     override fun onStop() {
         super.onStop()
-        connectivityManager.unregisterNetworkCallback(networkCallback)
+        try {
+            connectivityManager.unregisterNetworkCallback(networkCallback)
+        } catch (e: Exception) {
+            // Ignore if not registered
+        }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
